@@ -1,1 +1,3 @@
 ImmersedBoundaryNumerics.hpp
+TestNumericsPaperSimulations.hpp
+TestShortImmersedBoundarySimulations.hpp

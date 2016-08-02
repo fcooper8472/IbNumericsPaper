@@ -45,6 +45,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OutputFileHandler.hpp"
 #include "SmartPointers.hpp"
 #include "UniformlyDistributedCellCycleModel.hpp"
+#include "ForwardEulerNumericalMethod.hpp"
 
 // Includes from Immersed Boundary
 #include "ImmersedBoundaryMesh.hpp"
@@ -54,8 +55,11 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ImmersedBoundaryMembraneElasticityForce.hpp"
 #include "ImmersedBoundaryCellCellInteractionForce.hpp"
 
+#include "Debug.hpp"
+
 // Other includes
 #include <boost/lexical_cast.hpp>
+#include <boost/make_shared.hpp>
 
 // Simulation does not run in parallel
 #include "FakePetscSetup.hpp"
@@ -451,7 +455,7 @@ public:
         results_file->close();
     }
 
-    void TestInterCellularParameterScaling() throw(Exception)
+    void xTestInterCellularParameterScaling() throw(Exception)
     {
         /*
          * This test runs two simulations of two ellipsoid membrane with different
@@ -676,5 +680,117 @@ public:
         }
 
         results_file->close();
+    }
+
+    void TestElementShapeWithCellDivision() throw(Exception)
+    {
+        /*
+         */
+        std::string output_directory = "numerics_paper/elem_shape_cell_div";
+
+        OutputFileHandler results_handler(output_directory, false);
+        out_stream results_file = results_handler.OpenOutputFile("elem_shape_cell_div.dat");
+
+        // Output summary statistics to results file
+        (*results_file) << "num_nodes,esf\n";
+
+        // Vector representing number of nodes in each simulation
+        std::vector<unsigned> num_nodes_vec;
+        for (unsigned i = 4; i < 15; i++)
+        {
+            num_nodes_vec.push_back(static_cast<unsigned>(pow(2, i)));
+        }
+
+        TS_ASSERT_EQUALS(num_nodes_vec.front(), 16u);
+        TS_ASSERT_EQUALS(num_nodes_vec.back(), 16384u);
+
+        // Vector to store esf results
+        std::vector<double> esf;
+
+        // Run sims with each number of nodes from num_nodes vector
+        for (unsigned i = 0; i < num_nodes_vec.size(); i++)
+        {
+            unsigned num_nodes_this_sim = num_nodes_vec[i];
+
+            SimulationTime::Instance()->Destroy();
+            SimulationTime::Instance()->SetStartTime(0.0);
+
+            /*
+             * 1: Num cells
+             * 2: Num nodes per cell
+             * 3: Superellipse exponent
+             * 4: Superellipse aspect ratio
+             * 5: Random y-variation
+             * 6: Include membrane
+             */
+            ImmersedBoundaryPalisadeMeshGenerator gen(1, num_nodes_this_sim, 1.0, 2.0, 0.0, false);
+            ImmersedBoundaryMesh<2, 2>* p_mesh = gen.GetMesh();
+
+            p_mesh->SetNumGridPtsXAndY(32);
+
+            std::vector<CellPtr> cells;
+            MAKE_PTR(TransitCellProliferativeType, p_cell_type);
+            CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+            cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_cell_type);
+
+            ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
+            cell_population.SetIfPopulationHasActiveSources(false);
+
+            OffLatticeSimulation<2> simulator(cell_population);
+            simulator.SetNumericalMethod(boost::make_shared<ForwardEulerNumericalMethod<2,2> >());
+            simulator.GetNumericalMethod()->SetUseUpdateNodeLocation(true);
+
+            // Add main immersed boundary simulation modifier
+            MAKE_PTR(ImmersedBoundarySimulationModifier<2>, p_main_modifier);
+            simulator.AddSimulationModifier(p_main_modifier);
+
+            // Add force laws
+            MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+            p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
+            p_boundary_force->SetSpringConstant(1e7);
+            p_boundary_force->SetRestLengthMultiplier(0.5);
+
+            // Create and set an output directory that is different for each simulation
+            std::ostringstream zero_padded_num_nodes;
+            zero_padded_num_nodes << std::setw(5) << std::setfill('0') << num_nodes_this_sim;
+            simulator.SetOutputDirectory(output_directory + "/" + zero_padded_num_nodes.str());
+
+            double dt = 0.01;
+
+            // Set simulation properties and solve
+            simulator.SetDt(dt);
+            simulator.SetSamplingTimestepMultiple(1);
+            simulator.SetEndTime(1.0 * dt);
+            simulator.Solve();
+
+            p_mesh->SetElementDivisionSpacing(0.05);
+
+            CellPtr p_cell_0 = cell_population.GetCellUsingLocationIndex(0);
+            UniformlyDistributedCellCycleModel* p_model = static_cast<UniformlyDistributedCellCycleModel*>
+            ( p_cell_0->GetCellCycleModel() );
+
+            // Set the duration (between 12 and 14, by default) and set birth time so age is longer than duration
+            p_model->SetCellCycleDuration();
+            p_model->SetBirthTime(-1.0 * p_model->GetMaxCellCycleDuration());
+
+            // Verify that the cell is now ready to divide, and call Divide()
+            TS_ASSERT(p_cell_0->ReadyToDivide());
+            CellPtr p_new_cell = p_cell_0->Divide();
+
+            c_vector<double, 2> division_vector = cell_population.CalculateCellDivisionVector(p_cell_0);
+
+            // Add new cell to the cell population
+            cell_population.AddCell(p_new_cell, division_vector, p_cell_0);
+
+            simulator.SetEndTime(2.0 * dt);
+            simulator.Solve();
+
+            double esf_at_end = p_mesh->GetElongationShapeFactorOfElement(0);
+
+            // Output summary statistics to results file.  lexical_cast is a convenient way to output doubles at max precision.
+            (*results_file) << num_nodes_this_sim << ","
+                            << boost::lexical_cast<std::string>(esf_at_end)
+                            << "\n";
+        }
     }
 };
