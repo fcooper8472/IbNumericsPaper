@@ -77,6 +77,9 @@ public:
      */
     void Profile(unsigned numGridPts, unsigned numNodesPerSide)
     {
+        Timer timer;
+        timer.Reset();
+
         /**
          * @param numElementsX  the number of cells from left to right along the domain
          * @param numElementsY  the number of cells from top to bottom up the domain
@@ -116,15 +119,27 @@ public:
         p_main_modifier->AddImmersedBoundaryForce(p_cell_cell_force);
         p_cell_cell_force->SetSpringConstant(1e6);
 
-        std::string output_directory = "numerics_paper/profiling_" + boost::lexical_cast<std::string>(numGridPts);
-        simulator.SetOutputDirectory(output_directory);
+        std::string output_directory = "numerics_paper/profiling/";
+        std::string leaf_name = "profiling_" + boost::lexical_cast<std::string>(numGridPts);
+        simulator.SetOutputDirectory(output_directory + leaf_name);
 
         // Set simulation properties
         double dt = 0.01;
         simulator.SetDt(dt);
         simulator.SetSamplingTimestepMultiple(1);
-        simulator.SetEndTime(2000 * dt);
+        simulator.SetEndTime(2 * dt);
         simulator.Solve();
+
+        double total_simulation_time = timer.GetElapsedTime();
+
+        OutputFileHandler results_handler(output_directory, false);
+        out_stream results_file = results_handler.OpenOutputFile("profiling_times.dat", std::cout.app);
+
+        // Output summary statistics to results file
+        (*results_file) << boost::lexical_cast<std::string>(numGridPts) << ","
+                        << boost::lexical_cast<std::string>(total_simulation_time) << "\n";
+
+        results_file->close();
 
         // Because this will be run multiple times, we destroy the SimulationTime singleton
         SimulationTime::Destroy();
@@ -145,7 +160,7 @@ public:
         Timer timer;
         timer.Reset();
 
-        Profile(1024, 100);
+        Profile(256, 100);
 
         PRINT_VARIABLE(timer.GetElapsedTime());
     }
@@ -155,7 +170,7 @@ public:
         Timer timer;
         timer.Reset();
 
-        Profile(2048, 200);
+        Profile(128, 200);
 
         PRINT_VARIABLE(timer.GetElapsedTime());
     }
