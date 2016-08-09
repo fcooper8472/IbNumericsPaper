@@ -686,13 +686,8 @@ public:
     {
         /*
          */
+
         std::string output_directory = "numerics_paper/elem_shape_cell_div";
-
-        OutputFileHandler results_handler(output_directory, false);
-        out_stream results_file = results_handler.OpenOutputFile("elem_shape_cell_div.dat");
-
-        // Output summary statistics to results file
-        (*results_file) << "num_nodes,esf\n";
 
         // Vector representing number of nodes in each simulation
         std::vector<unsigned> num_nodes_vec;
@@ -785,12 +780,31 @@ public:
             simulator.SetEndTime(2.0 * dt);
             simulator.Solve();
 
-            double esf_at_end = p_mesh->GetElongationShapeFactorOfElement(0);
+            esf.push_back(p_mesh->GetElongationShapeFactorOfElement(0));
+        }
+
+        TS_ASSERT_EQUALS(num_nodes_vec.size(), esf.size())
+
+        OutputFileHandler results_handler(output_directory, false);
+        out_stream results_file = results_handler.OpenOutputFile("elem_shape_cell_div.dat");
+
+        double best_esf = esf.back();
+
+        // Output summary statistics to results file
+        (*results_file) << "num_nodes,esf,error,log2_num_nodes,log2_error\n";
+
+        for (unsigned i = 0; i < num_nodes_vec.size() - 1; i++)
+        {
+            double error = fabs(esf[i] - best_esf);
 
             // Output summary statistics to results file.  lexical_cast is a convenient way to output doubles at max precision.
-            (*results_file) << num_nodes_this_sim << ","
-                            << boost::lexical_cast<std::string>(esf_at_end)
-                            << "\n";
+            (*results_file) << num_nodes_vec[i] << ","
+                            << boost::lexical_cast<std::string>(esf[i]) << ","
+                            << boost::lexical_cast<std::string>(error) << ","
+                            << boost::lexical_cast<std::string>(log(num_nodes_vec[i]) / log(2.0)) << ","
+                            << boost::lexical_cast<std::string>(log(error) / log(2.0)) << "\n";
         }
+
+
     }
 };
