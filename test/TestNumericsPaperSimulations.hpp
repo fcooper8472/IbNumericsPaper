@@ -783,26 +783,19 @@ public:
             esf_vec.push_back(p_mesh->GetElongationShapeFactorOfElement(0));
         }
 
-        TS_ASSERT_EQUALS(num_nodes_vec.size(), esf_vec.size())
+        TS_ASSERT_EQUALS(num_nodes_vec.size(), esf_vec.size());
 
         OutputFileHandler results_handler(output_directory, false);
         out_stream results_file = results_handler.OpenOutputFile("elem_shape_cell_div.dat");
 
-        double best_esf = esf_vec.back();
-
         // Output summary statistics to results file
-        (*results_file) << "num_nodes,esf_vec,error,log2_num_nodes,log2_error\n";
+        (*results_file) << "num_nodes,esf\n";
 
-        for (unsigned i = 0; i < num_nodes_vec.size() - 1; i++)
+        for (unsigned i = 0; i < num_nodes_vec.size(); i++)
         {
-            double error = fabs(esf_vec[i] - best_esf);
-
             // Output summary statistics to results file.  lexical_cast is a convenient way to output doubles at max precision.
             (*results_file) << num_nodes_vec[i] << ","
-                            << boost::lexical_cast<std::string>(esf_vec[i]) << ","
-                            << boost::lexical_cast<std::string>(error) << ","
-                            << boost::lexical_cast<std::string>(log(num_nodes_vec[i]) / log(2.0)) << ","
-                            << boost::lexical_cast<std::string>(log(error) / log(2.0)) << "\n";
+                            << boost::lexical_cast<std::string>(esf_vec[i]) << "\n";
         }
 
 
