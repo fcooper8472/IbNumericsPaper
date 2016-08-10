@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 # Globally accessible directory paths, names, and variables
 chaste_build_dir = os.environ.get('CHASTE_BUILD_DIR')
-executable = os.path.join(chaste_build_dir, 'projects/ImmersedBoundary/apps', 'Exe_ConvergenceWithMesh')
+executable = os.path.join(chaste_build_dir, 'projects/IbNumericsPaper/apps', 'Exe_ConvergenceWithMesh')
 
 if not(os.path.isfile(executable)):
     raise Exception('Py: Could not find executable: ' + executable)
@@ -17,17 +17,17 @@ if not(os.path.isfile(executable)):
 chaste_test_dir = os.environ.get('CHASTE_TEST_OUTPUT')
 path_to_output = os.path.join(chaste_test_dir, 'convergence', 'mesh')
 
-pdf_name = os.path.join(path_to_output, 'ConvergenceWithMesh.pdf')
+pdf_name = os.path.join(path_to_output, 'ConvergenceWithMesh')
 results_header_string = 'simulation_id,mesh_spacing,esf_at_end\n'
 
 num_sims = 15
 
 
 def main():
-    run_simulations()
-    combine_output()
+    #run_simulations()
+    #combine_output()
     plot_results()
-    compress_output()
+    #compress_output()
 
 
 # Create a list of commands and pass them to separate processes
@@ -170,7 +170,57 @@ def plot_results():
     ax.grid(b=True, which='major', color=bg_gray, linestyle='dotted', dash_capstyle='round')
 
     # Export figure
-    plt.savefig(pdf_name, bbox_inches='tight', pad_inches=0.0)
+    plt.savefig(pdf_name + '.pdf', bbox_inches='tight', pad_inches=0.0)
+
+    best_esf = esf_at_end[-1]
+    mesh_spacing = mesh_spacing[0:-2]
+    esf_at_end = esf_at_end[0:-2]
+    log_error = -np.log2(np.fabs(esf_at_end - best_esf))
+
+    # Calculate the linear fit and export to file
+    linear_fit = np.polyfit(mesh_spacing, log_error, 1)
+    np.savetxt(os.path.join(path_to_output, 'linear_fit.dat'), linear_fit, delimiter=',')
+
+    # Plot the log-log graph
+    # Calculate limits to give a comfy margin
+    x_min, x_max = min(mesh_spacing), max(mesh_spacing)
+    y_min, y_max = min(log_error), max(log_error)
+
+    x_range, y_range = x_max - x_min, y_max - y_min
+    margin = 0.05
+
+    x_lims = [x_min - margin * x_range, x_max + margin * x_range]
+    y_lims = [y_min - margin * y_range, y_max + margin * y_range]
+
+    linear_x = np.linspace(x_min, x_max, 100)
+    linear_y = linear_fit[1] + linear_fit[0] * linear_x
+
+    # Plot the linear fit, then the data
+    plt.plot(linear_x, linear_y,
+             linewidth=0.75,
+             color=mycol_or)
+
+    plt.plot(mesh_spacing, log_error, marker='o',
+             linewidth=0,
+             markerfacecolor=mycol_lb,
+             markeredgecolor=mycol_or,
+             markersize=4.0,
+             markeredgewidth=0.75)
+
+    # Set the axis limits
+    plt.xlim(x_lims)
+    plt.ylim(y_lims)
+
+    # Label the axes
+    plt.xlabel(r'$-\log_2(h)$', fontsize=font_size, labelpad=1.0*font_size)
+    plt.ylabel(r'$-\log_2(|$error$|)$', fontsize=font_size, labelpad=1.0*font_size)
+
+    # Customise axes
+    ax = plt.gca()
+    ax.grid(b=True, which='major', color=bg_gray, linestyle='dotted', dash_capstyle='round')
+
+    # Export figure
+    plt.savefig(pdf_name + '_loglog.pdf', bbox_inches='tight', pad_inches=0.0)
 
 
 # Compress output and suffix with date run
