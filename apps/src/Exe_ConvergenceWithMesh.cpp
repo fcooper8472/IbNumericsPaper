@@ -41,22 +41,23 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CheckpointArchiveTypes.hpp"
 #include "DifferentiatedCellProliferativeType.hpp"
 #include "ExecutableSupport.hpp"
+#include "ForwardEulerNumericalMethod.hpp"
+#include "ImmersedBoundaryCellCellInteractionForce.hpp"
+#include "ImmersedBoundaryCellPopulation.hpp"
+#include "ImmersedBoundaryMembraneElasticityForce.hpp"
+#include "ImmersedBoundaryMesh.hpp"
+#include "ImmersedBoundaryPalisadeMeshGenerator.hpp"
+#include "ImmersedBoundarySimulationModifier.hpp"
 #include "OffLatticeSimulation.hpp"
 #include "SmartPointers.hpp"
 #include "UniformlyDistributedCellCycleModel.hpp"
 
-// Includes from Immersed Boundary
-#include "ImmersedBoundaryMesh.hpp"
-#include "ImmersedBoundaryCellPopulation.hpp"
-#include "ImmersedBoundarySimulationModifier.hpp"
-#include "ImmersedBoundaryPalisadeMeshGenerator.hpp"
-#include "ImmersedBoundaryMembraneElasticityForce.hpp"
-#include "ImmersedBoundaryCellCellInteractionForce.hpp"
-
-// Program option includes for handling command line arguments
+// Boost includes
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/parsers.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/make_shared.hpp>
 
 /*
  * Prototype functions
@@ -69,7 +70,7 @@ void OutputOnCompletion(unsigned simulationId, unsigned numMeshPoints);
 int main(int argc, char *argv[])
 {
     // This sets up PETSc and prints out copyright information, etc.
-    ExecutableSupport::StandardStartup(&argc, &argv);
+    ExecutableSupport::StartupWithoutShowingCopyright(&argc, &argv);
 
     // Define command line options
     boost::program_options::options_description general_options("This is a Chaste Immersed Boundary executable.\n");
@@ -152,6 +153,8 @@ void SetupAndRunSimulation(unsigned simulationId, unsigned numMeshPoints)
     cell_population.SetIfPopulationHasActiveSources(false);
 
     OffLatticeSimulation<2> simulator(cell_population);
+    simulator.SetNumericalMethod(boost::make_shared<ForwardEulerNumericalMethod<2,2> >());
+    simulator.GetNumericalMethod()->SetUseUpdateNodeLocation(true);
 
     // Add main immersed boundary simulation modifier
     MAKE_PTR(ImmersedBoundarySimulationModifier<2>, p_main_modifier);
@@ -173,7 +176,7 @@ void SetupAndRunSimulation(unsigned simulationId, unsigned numMeshPoints)
 
     // Set simulation properties and solve
     simulator.SetDt(dt);
-    simulator.SetSamplingTimestepMultiple(10);
+    simulator.SetSamplingTimestepMultiple(1);
     simulator.SetEndTime(end_time);
     simulator.Solve();
 
