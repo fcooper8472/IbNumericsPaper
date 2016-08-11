@@ -691,16 +691,18 @@ public:
 
         // Vector representing number of nodes in each simulation
         std::vector<unsigned> num_nodes_vec;
-        for (unsigned i = 4; i < 15; i++)
+        for (unsigned i = 0; i < 17; i++)
         {
-            num_nodes_vec.push_back(static_cast<unsigned>(pow(2, i)));
+            double exponent = 6.0 + (0.5 * i);
+            num_nodes_vec.push_back(static_cast<unsigned>(pow(2.0, exponent)));
         }
 
-        TS_ASSERT_EQUALS(num_nodes_vec.front(), 16u);
+        TS_ASSERT_EQUALS(num_nodes_vec.front(), 64u);
         TS_ASSERT_EQUALS(num_nodes_vec.back(), 16384u);
 
         // Vector to store esf_vec results
         std::vector<double> esf_vec;
+        std::vector<double> spacing;
 
         // Run sims with each number of nodes from num_nodes vector
         for (unsigned i = 0; i < num_nodes_vec.size(); i++)
@@ -772,29 +774,29 @@ public:
             TS_ASSERT(p_cell_0->ReadyToDivide());
             CellPtr p_new_cell = p_cell_0->Divide();
 
-            c_vector<double, 2> division_vector = cell_population.CalculateCellDivisionVector(p_cell_0);
-
             // Add new cell to the cell population
-            cell_population.AddCell(p_new_cell, division_vector, p_cell_0);
+            cell_population.AddCell(p_new_cell, p_cell_0);
 
             simulator.SetEndTime(2.0 * dt);
             simulator.Solve();
 
             esf_vec.push_back(p_mesh->GetElongationShapeFactorOfElement(0));
+            spacing.push_back(p_mesh->GetAverageNodeSpacingOfElement(0, true));
         }
 
         TS_ASSERT_EQUALS(num_nodes_vec.size(), esf_vec.size());
 
         OutputFileHandler results_handler(output_directory, false);
-        out_stream results_file = results_handler.OpenOutputFile("elem_shape_cell_div.dat");
+        out_stream results_file = results_handler.OpenOutputFile("division_convergence.dat");
 
         // Output summary statistics to results file
-        (*results_file) << "num_nodes,esf\n";
+        (*results_file) << "num_nodes,spacing,esf\n";
 
         for (unsigned i = 0; i < num_nodes_vec.size(); i++)
         {
             // Output summary statistics to results file.  lexical_cast is a convenient way to output doubles at max precision.
             (*results_file) << num_nodes_vec[i] << ","
+                            << boost::lexical_cast<std::string>(spacing[i]) << ","
                             << boost::lexical_cast<std::string>(esf_vec[i]) << "\n";
         }
 
