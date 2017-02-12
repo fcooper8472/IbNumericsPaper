@@ -44,6 +44,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TransitCellProliferativeType.hpp"
 #include "ExponentialG1GenerationalCellCycleModel.hpp"
 #include "CellsGenerator.hpp"
+#include "ImmersedBoundaryBoundaryCellWriter.hpp"
 #include "ImmersedBoundaryMesh.hpp"
 #include "ImmersedBoundarySimulationModifier.hpp"
 #include "ImmersedBoundaryHoneycombMeshGenerator.hpp"
@@ -150,14 +151,16 @@ public:
 
         ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.SetIfPopulationHasActiveSources(true);
+        cell_population.AddCellWriter<ImmersedBoundaryBoundaryCellWriter>();
 
         // Loop over all cells
         for (AbstractCellPopulation<2>::Iterator cell_it = cell_population.Begin();
              cell_it != cell_population.End();
              ++cell_it)
         {
-            dynamic_cast<ExponentialG1GenerationalCellCycleModel*>(cell_it->GetCellCycleModel())->SetTransitCellG1Duration(5.0);
+            dynamic_cast<ExponentialG1GenerationalCellCycleModel*>(cell_it->GetCellCycleModel())->SetRate(1.0);
             dynamic_cast<ExponentialG1GenerationalCellCycleModel*>(cell_it->GetCellCycleModel())->SetMaxTransitGenerations(3);
+            cell_it->GetCellCycleModel()->Initialise();
         }
 
         OffLatticeSimulation<2> simulator(cell_population);
@@ -182,11 +185,11 @@ public:
         simulator.SetOutputDirectory("TestProliferateFromHoneycomb");
         simulator.SetDt(dt);
         simulator.SetSamplingTimestepMultiple(100u);
-        simulator.SetEndTime(10.0);
+        simulator.SetEndTime(50.0);
 
         simulator.Solve();
 
-        PRINT_VECTOR(p_mesh->GetNode(23u)->rGetNeighbours());
+        PRINT_VECTOR(p_mesh->GetPolygonDistribution());
     }
 };
 
