@@ -140,9 +140,9 @@ public:
 
     void TestProliferateFromHoneycomb() throw(Exception)
     {
-        ImmersedBoundaryHoneycombMeshGenerator gen(4, 3, 8, 0.025, 0.4);
+        ImmersedBoundaryHoneycombMeshGenerator gen(3, 3, 8, 0.04, 0.45);
         ImmersedBoundaryMesh<2, 2>* p_mesh = gen.GetMesh();
-        p_mesh->SetNumGridPtsXAndY(64);
+        p_mesh->SetNumGridPtsXAndY(256);
 
         std::vector<CellPtr> cells;
         MAKE_PTR(TransitCellProliferativeType, p_cell_type);
@@ -158,8 +158,8 @@ public:
              cell_it != cell_population.End();
              ++cell_it)
         {
-            dynamic_cast<ExponentialG1GenerationalCellCycleModel*>(cell_it->GetCellCycleModel())->SetRate(1.0);
-            dynamic_cast<ExponentialG1GenerationalCellCycleModel*>(cell_it->GetCellCycleModel())->SetMaxTransitGenerations(3);
+            dynamic_cast<ExponentialG1GenerationalCellCycleModel*>(cell_it->GetCellCycleModel())->SetRate(0.1);
+            dynamic_cast<ExponentialG1GenerationalCellCycleModel*>(cell_it->GetCellCycleModel())->SetMaxTransitGenerations(5);
             cell_it->GetCellCycleModel()->Initialise();
         }
 
@@ -178,16 +178,20 @@ public:
         // Add force law
         MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
         p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-        p_boundary_force->SetElementSpringConst(1.0 * 1e7);
+        p_boundary_force->SetElementSpringConst(1.0 * 1e6);
+
+        PRINT_VARIABLE(p_mesh->GetSpacingRatio());
 
         // Set simulation properties
         double dt = 0.01;
         simulator.SetOutputDirectory("TestProliferateFromHoneycomb");
         simulator.SetDt(dt);
         simulator.SetSamplingTimestepMultiple(100u);
-        simulator.SetEndTime(50.0);
+        simulator.SetEndTime(250.0);
 
         simulator.Solve();
+
+        PRINT_VARIABLE(p_mesh->GetSpacingRatio());
 
         PRINT_VECTOR(p_mesh->GetPolygonDistribution());
     }
