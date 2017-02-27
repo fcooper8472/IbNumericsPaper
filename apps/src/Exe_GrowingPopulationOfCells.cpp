@@ -154,7 +154,7 @@ void SetupAndRunSimulation(std::string idString, double corRestLength, double co
      * 4: Proportional dist between cells
      * 5: Padding in x and y
      */
-    ImmersedBoundaryHoneycombMeshGenerator gen(3, 3, 8, 0.025, 0.425);
+    ImmersedBoundaryHoneycombMeshGenerator gen(3, 3, 8, 0.025, 0.45);
     ImmersedBoundaryMesh<2, 2>* p_mesh = gen.GetMesh();
     p_mesh->SetNumGridPtsXAndY(256);
 

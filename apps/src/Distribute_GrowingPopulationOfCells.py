@@ -46,7 +46,7 @@ csc = np.linspace(1e6, 1e7, num=3)
 trl = [0.01]
 tsc = np.linspace(1e6, 1e7, num=3)
 di = [1.0]
-ts = [5000]
+ts = [20000]
 
 # An enumerated iterable containing every combination of the parameter ranges defined above
 combined_iterable = list(itertools.product(crl, csc, trl, tsc, di, ts))
