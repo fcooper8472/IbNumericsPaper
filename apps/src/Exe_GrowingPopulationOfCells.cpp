@@ -45,6 +45,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ImmersedBoundaryLinearInteractionForce.hpp"
 #include "ImmersedBoundaryLinearMembraneForce.hpp"
 #include "ImmersedBoundaryMesh.hpp"
+#include "ImmersedBoundaryNeighbourNumberWriter.hpp"
 #include "ImmersedBoundarySimulationModifier.hpp"
 #include "OffLatticeSimulation.hpp"
 #include "SimpleTargetAreaModifier.hpp"
@@ -165,6 +166,9 @@ void SetupAndRunSimulation(std::string idString, double corRestLength, double co
     ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
     cell_population.SetIfPopulationHasActiveSources(true);
     cell_population.AddCellWriter<ImmersedBoundaryBoundaryCellWriter>();
+    cell_population.AddCellWriter<ImmersedBoundaryNeighbourNumberWriter>();
+
+    cell_population.SetInteractionDistance(cell_population.GetInteractionDistance() * interactionDist);
 
     // Loop over all cells
     for (AbstractCellPopulation<2>::Iterator cell_it = cell_population.Begin();
