@@ -47,6 +47,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ImmersedBoundaryMesh.hpp"
 #include "ImmersedBoundaryNeighbourNumberWriter.hpp"
 #include "ImmersedBoundarySimulationModifier.hpp"
+#include "NormallyDistributedTargetAreaModifier.hpp"
 #include "OffLatticeSimulation.hpp"
 #include "SimpleTargetAreaModifier.hpp"
 #include "SmartPointers.hpp"
@@ -63,10 +64,11 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*
  * Prototype functions
  */
-void SetupSingletons();
+void SetupSingletons(unsigned randomSeed);
 void DestroySingletons();
 void SetupAndRunSimulation(std::string idString, double corRestLength, double corSpringConst, double traRestLength,
-                           double traSpringConst, double interactionDist, unsigned numTimeSteps);
+                           double traSpringConst, double interactionDist, unsigned numTimeSteps,
+                           bool useNormallyDistAreaModifier);
 void OutputToConsole(std::string idString, std::string leading);
 
 int main(int argc, char *argv[])
@@ -78,14 +80,15 @@ int main(int argc, char *argv[])
     boost::program_options::options_description general_options("This is a Chaste Immersed Boundary executable.\n");
     general_options.add_options()
                     ("help", "produce help message")
-                    ("ID", boost::program_options::value<std::string>(),"ID string for the simulation")
+                    ("ID", boost::program_options::value<unsigned>()->default_value(0),"ID string for the simulation")
                     ("CRL", boost::program_options::value<double>()->default_value(0.0),"Cortical rest length")
                     ("CSC", boost::program_options::value<double>()->default_value(0.0),"Cortical spring constant")
                     ("TRL", boost::program_options::value<double>()->default_value(0.0),"Transmembrane rest length")
                     ("TSC", boost::program_options::value<double>()->default_value(0.0),"Transmembrane spring constant")
                     ("DI", boost::program_options::value<double>()->default_value(0.0),"Interaction distance for cell-cell forces")
-                    ("TS", boost::program_options::value<unsigned>()->default_value(1000u),"Number of time steps");
-    
+                    ("TS", boost::program_options::value<unsigned>()->default_value(1000u),"Number of time steps")
+                    ("NDA", boost::program_options::value<bool>()->default_value(false),"Whether to use normally distributed target areas");
+
     // Define parse command line into variables_map
     boost::program_options::variables_map variables_map;
     boost::program_options::store(parse_command_line(argc, argv, general_options), variables_map);
@@ -99,29 +102,32 @@ int main(int argc, char *argv[])
     }
 
     // Get ID and name from command line
-    std::string id_string = variables_map["ID"].as<std::string>();
+    unsigned sim_id = variables_map["ID"].as<unsigned>();
     double cor_rest_length = variables_map["CRL"].as<double>();
     double cor_spring_const = variables_map["CSC"].as<double>();
     double tra_rest_length = variables_map["TRL"].as<double>();
     double tra_spring_const = variables_map["TSC"].as<double>();
     double interaction_dist = variables_map["DI"].as<double>();
     unsigned num_time_steps = variables_map["TS"].as<unsigned>();
+    bool useNormallyDistAreaModifier = variables_map["NDA"].as<bool>();
+
+    std::string id_string = boost::lexical_cast<std::string>(sim_id);
 
     OutputToConsole(id_string, "Started");
-    SetupSingletons();
+    SetupSingletons(sim_id);
     SetupAndRunSimulation(id_string, cor_rest_length, cor_spring_const, tra_rest_length, tra_spring_const,
-                          interaction_dist, num_time_steps);
+                          interaction_dist, num_time_steps, useNormallyDistAreaModifier);
     DestroySingletons();
     OutputToConsole(id_string, "Completed");
 }
 
-void SetupSingletons()
+void SetupSingletons(unsigned randomSeed)
 {
     // Set up what the test suite would do
     SimulationTime::Instance()->SetStartTime(0.0);
 
     // Reseed with 0 for same random numbers each time, or time(NULL) or simulation_id to change each realisation
-    RandomNumberGenerator::Instance()->Reseed(0);
+    RandomNumberGenerator::Instance()->Reseed(randomSeed);
     CellPropertyRegistry::Instance()->Clear();
     CellId::ResetMaxCellId();
 }
@@ -145,7 +151,8 @@ void OutputToConsole(std::string idString, std::string leading)
 }
 
 void SetupAndRunSimulation(std::string idString, double corRestLength, double corSpringConst, double traRestLength,
-                           double traSpringConst, double interactionDist, unsigned numTimeSteps)
+                           double traSpringConst, double interactionDist, unsigned numTimeSteps,
+                           bool useNormallyDistAreaModifier)
 {
     /*
      * 1: Num cells x
@@ -188,9 +195,18 @@ void SetupAndRunSimulation(std::string idString, double corRestLength, double co
     MAKE_PTR(ImmersedBoundarySimulationModifier<2>, p_main_modifier);
     simulator.AddSimulationModifier(p_main_modifier);
 
-    MAKE_PTR(SimpleTargetAreaModifier<2>, p_area_modifier);
-    simulator.AddSimulationModifier(p_area_modifier);
-    p_area_modifier->SetReferenceTargetArea(p_mesh->GetVolumeOfElement(0));
+    if (useNormallyDistAreaModifier)
+    {
+        MAKE_PTR(NormallyDistributedTargetAreaModifier<2>, p_area_modifier);
+        simulator.AddSimulationModifier(p_area_modifier);
+        p_area_modifier->SetReferenceTargetArea(p_mesh->GetVolumeOfElement(0));
+    }
+    else
+    {
+        MAKE_PTR(SimpleTargetAreaModifier<2>, p_area_modifier);
+        simulator.AddSimulationModifier(p_area_modifier);
+        p_area_modifier->SetReferenceTargetArea(p_mesh->GetVolumeOfElement(0));
+    }
 
     // Add force law
     MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
@@ -210,7 +226,7 @@ void SetupAndRunSimulation(std::string idString, double corRestLength, double co
     double dt = 0.01;
     simulator.SetOutputDirectory(output_directory);
     simulator.SetDt(dt);
-    simulator.SetSamplingTimestepMultiple(numTimeSteps - 1);
+    simulator.SetSamplingTimestepMultiple(100);
     simulator.SetEndTime(dt * numTimeSteps);
 
     simulator.Solve();
