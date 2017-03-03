@@ -44,15 +44,15 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OffLatticeSimulation.hpp"
 #include "OutputFileHandler.hpp"
 #include "SmartPointers.hpp"
-#include "UniformlyDistributedCellCycleModel.hpp"
+#include "UniformCellCycleModel.hpp"
 
 // Includes from Immersed Boundary
 #include "ImmersedBoundaryMesh.hpp"
 #include "ImmersedBoundaryCellPopulation.hpp"
 #include "ImmersedBoundarySimulationModifier.hpp"
 #include "ImmersedBoundaryHoneycombMeshGenerator.hpp"
-#include "ImmersedBoundaryMembraneElasticityForce.hpp"
-#include "ImmersedBoundaryCellCellInteractionForce.hpp"
+#include "ImmersedBoundaryLinearMembraneForce.hpp"
+#include "ImmersedBoundaryLinearInteractionForce.hpp"
 
 #include "ForwardEulerNumericalMethod.hpp"
 #include <boost/lexical_cast.hpp>
@@ -96,7 +96,7 @@ public:
 
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
-        CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_diff_type);
 
         ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
@@ -111,13 +111,13 @@ public:
         simulator.AddSimulationModifier(p_main_modifier);
 
         // Add force laws
-        MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+        MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
         p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-        p_boundary_force->SetSpringConstant(1e7);
+        p_boundary_force->SetElementSpringConst(1e7);
 
-        MAKE_PTR(ImmersedBoundaryCellCellInteractionForce<2>, p_cell_cell_force);
+        MAKE_PTR(ImmersedBoundaryLinearInteractionForce<2>, p_cell_cell_force);
         p_main_modifier->AddImmersedBoundaryForce(p_cell_cell_force);
-        p_cell_cell_force->SetSpringConstant(1e6);
+        p_cell_cell_force->SetSpringConst(1e6);
 
         std::string output_directory = "numerics_paper/profiling/";
         std::string leaf_name = "profiling_" + boost::lexical_cast<std::string>(numGridPts);

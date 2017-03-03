@@ -44,7 +44,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OffLatticeSimulation.hpp"
 #include "OutputFileHandler.hpp"
 #include "SmartPointers.hpp"
-#include "UniformlyDistributedCellCycleModel.hpp"
+#include "UniformCellCycleModel.hpp"
 #include "ForwardEulerNumericalMethod.hpp"
 
 // Includes from Immersed Boundary
@@ -52,8 +52,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ImmersedBoundaryCellPopulation.hpp"
 #include "ImmersedBoundarySimulationModifier.hpp"
 #include "ImmersedBoundaryPalisadeMeshGenerator.hpp"
-#include "ImmersedBoundaryMembraneElasticityForce.hpp"
-#include "ImmersedBoundaryCellCellInteractionForce.hpp"
+#include "ImmersedBoundaryLinearMembraneForce.hpp"
+#include "ImmersedBoundaryLinearInteractionForce.hpp"
 
 #include "Debug.hpp"
 
@@ -100,7 +100,7 @@ public:
 
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
-        CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_diff_type);
 
         ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
@@ -113,9 +113,9 @@ public:
         simulator.AddSimulationModifier(p_main_modifier);
 
         // Add force laws
-        MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+        MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
         p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-        p_boundary_force->SetSpringConstant(1e8);
+        p_boundary_force->SetElementSpringConst(1e8);
 
         std::string output_directory = "numerics_paper/ellipse_relaxing";
         simulator.SetOutputDirectory(output_directory);
@@ -224,7 +224,7 @@ public:
 
             std::vector<CellPtr> cells;
             MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
-            CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+            CellsGenerator<UniformCellCycleModel, 2> cells_generator;
             cells_generator.GenerateBasicRandom(cells, mesh.GetNumElements(), p_diff_type);
             ImmersedBoundaryCellPopulation<2> cell_population(mesh, cells);
 
@@ -236,10 +236,10 @@ public:
             simulation.AddSimulationModifier(p_main_modifier);
 
             // Add force law
-            MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+            MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
             p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-            p_boundary_force->SetSpringConstant(1e9);
-            p_boundary_force->SetRestLengthMultiplier(0.5);
+            p_boundary_force->SetElementSpringConst(1e9);
+            p_boundary_force->SetElementRestLength(0.5);
 
             std::string sim_output_dir = output_directory + "/sim";
             sim_output_dir += boost::lexical_cast<std::string>(sim_idx);
@@ -332,7 +332,7 @@ public:
 
             std::vector<CellPtr> cells;
             MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
-            CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+            CellsGenerator<UniformCellCycleModel, 2> cells_generator;
             cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_diff_type);
             ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
 
@@ -344,10 +344,10 @@ public:
             simulation.AddSimulationModifier(p_main_modifier);
 
             // Add force law
-            MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+            MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
             p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-            p_boundary_force->SetSpringConstant(1e7);
-            p_boundary_force->SetRestLengthMultiplier(0.5);
+            p_boundary_force->SetElementSpringConst(1e7);
+            p_boundary_force->SetElementRestLength(0.5);
 
             // Simulation output directory
             std::string output_dir_256 = output_directory + '/' + boost::lexical_cast<std::string>(256);
@@ -404,7 +404,7 @@ public:
 
             std::vector<CellPtr> cells;
             MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
-            CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+            CellsGenerator<UniformCellCycleModel, 2> cells_generator;
             cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_diff_type);
             ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
 
@@ -416,10 +416,10 @@ public:
             simulation.AddSimulationModifier(p_main_modifier);
 
             // Add force law
-            MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+            MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
             p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-            p_boundary_force->SetSpringConstant(1e7);
-            p_boundary_force->SetRestLengthMultiplier(0.5);
+            p_boundary_force->SetElementSpringConst(1e7);
+            p_boundary_force->SetElementRestLength(0.5);
 
             // Simulation output directory
             std::string output_dir_512 = output_directory + '/' + boost::lexical_cast<std::string>(512);
@@ -535,7 +535,7 @@ public:
 
             std::vector<CellPtr> cells;
             MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
-            CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+            CellsGenerator<UniformCellCycleModel, 2> cells_generator;
             cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_diff_type);
             ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
 
@@ -547,13 +547,13 @@ public:
             simulation.AddSimulationModifier(p_main_modifier);
 
             // Add intra-cellular force law
-            MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+            MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
             p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-            p_boundary_force->SetSpringConstant(1e7);
-            p_boundary_force->SetRestLengthMultiplier(0.5);
+            p_boundary_force->SetElementSpringConst(1e7);
+            p_boundary_force->SetElementRestLength(0.5);
 
             // Add inter-cellular force law
-            MAKE_PTR(ImmersedBoundaryCellCellInteractionForce<2>, p_cell_cell_force);
+            MAKE_PTR(ImmersedBoundaryLinearInteractionForce<2>, p_cell_cell_force);
             p_main_modifier->AddImmersedBoundaryForce(p_cell_cell_force);
             p_cell_cell_force->SetSpringConstant(1e6);
 
@@ -626,7 +626,7 @@ public:
 
             std::vector<CellPtr> cells;
             MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
-            CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+            CellsGenerator<UniformCellCycleModel, 2> cells_generator;
             cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_diff_type);
             ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
 
@@ -638,13 +638,13 @@ public:
             simulation.AddSimulationModifier(p_main_modifier);
 
             // Add intra-cellular force law
-            MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+            MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
             p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-            p_boundary_force->SetSpringConstant(1e7);
-            p_boundary_force->SetRestLengthMultiplier(0.5);
+            p_boundary_force->SetElementSpringConst(1e7);
+            p_boundary_force->SetElementRestLength(0.5);
 
             // Add inter-cellular force law
-            MAKE_PTR(ImmersedBoundaryCellCellInteractionForce<2>, p_cell_cell_force);
+            MAKE_PTR(ImmersedBoundaryLinearInteractionForce<2>, p_cell_cell_force);
             p_main_modifier->AddImmersedBoundaryForce(p_cell_cell_force);
             p_cell_cell_force->SetSpringConstant(1e6);
 
@@ -727,7 +727,7 @@ public:
 
             std::vector<CellPtr> cells;
             MAKE_PTR(TransitCellProliferativeType, p_cell_type);
-            CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+            CellsGenerator<UniformCellCycleModel, 2> cells_generator;
             cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_cell_type);
 
             ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
@@ -742,10 +742,10 @@ public:
             simulator.AddSimulationModifier(p_main_modifier);
 
             // Add force laws
-            MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+            MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
             p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-            p_boundary_force->SetSpringConstant(1e7);
-            p_boundary_force->SetRestLengthMultiplier(0.5);
+            p_boundary_force->SetElementSpringConst(1e7);
+            p_boundary_force->SetElementRestLength(0.5);
 
             // Create and set an output directory that is different for each simulation
             std::ostringstream zero_padded_num_nodes;
@@ -763,7 +763,7 @@ public:
             p_mesh->SetElementDivisionSpacing(0.05);
 
             CellPtr p_cell_0 = cell_population.GetCellUsingLocationIndex(0);
-            UniformlyDistributedCellCycleModel* p_model = static_cast<UniformlyDistributedCellCycleModel*>
+            UniformCellCycleModel* p_model = static_cast<UniformCellCycleModel*>
             ( p_cell_0->GetCellCycleModel() );
 
             // Set the duration (between 12 and 14, by default) and set birth time so age is longer than duration

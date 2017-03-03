@@ -42,15 +42,15 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DifferentiatedCellProliferativeType.hpp"
 #include "ExecutableSupport.hpp"
 #include "ForwardEulerNumericalMethod.hpp"
-#include "ImmersedBoundaryCellCellInteractionForce.hpp"
+#include "ImmersedBoundaryLinearInteractionForce.hpp"
 #include "ImmersedBoundaryCellPopulation.hpp"
-#include "ImmersedBoundaryMembraneElasticityForce.hpp"
+#include "ImmersedBoundaryLinearMembraneForce.hpp"
 #include "ImmersedBoundaryMesh.hpp"
 #include "ImmersedBoundaryPalisadeMeshGenerator.hpp"
 #include "ImmersedBoundarySimulationModifier.hpp"
 #include "OffLatticeSimulation.hpp"
 #include "SmartPointers.hpp"
-#include "UniformlyDistributedCellCycleModel.hpp"
+#include "UniformCellCycleModel.hpp"
 
 // Boost includes
 #include <boost/program_options/options_description.hpp>
@@ -146,7 +146,7 @@ void SetupAndRunSimulation(unsigned simulationId, double timeStep)
 
     std::vector<CellPtr> cells;
     MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
-    CellsGenerator<UniformlyDistributedCellCycleModel, 2> cells_generator;
+    CellsGenerator<UniformCellCycleModel, 2> cells_generator;
     cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_diff_type);
 
     ImmersedBoundaryCellPopulation<2> cell_population(*p_mesh, cells);
@@ -161,10 +161,10 @@ void SetupAndRunSimulation(unsigned simulationId, double timeStep)
     simulator.AddSimulationModifier(p_main_modifier);
 
     // Add force law
-    MAKE_PTR(ImmersedBoundaryMembraneElasticityForce<2>, p_boundary_force);
+    MAKE_PTR(ImmersedBoundaryLinearMembraneForce<2>, p_boundary_force);
     p_main_modifier->AddImmersedBoundaryForce(p_boundary_force);
-    p_boundary_force->SetSpringConstant(1e7);
-    p_boundary_force->SetRestLengthMultiplier(0.5);
+    p_boundary_force->SetElementSpringConst(1e7);
+    p_boundary_force->SetElementRestLength(0.5);
 
     // Create and set an output directory that is different for each simulation
     std::stringstream output_directory;
