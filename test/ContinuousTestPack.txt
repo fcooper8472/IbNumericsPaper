@@ -1,2 +1,5 @@
+ImmersedBoundaryNumerics.hpp
+TestGrowingPopulationOfCells.hpp
 TestNumericsPaperSimulations.hpp
 TestProfiling.hpp
+TestShortImmersedBoundarySimulations.hpp
