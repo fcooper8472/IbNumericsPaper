@@ -1,7 +1,0 @@
-This project makes use of the Chaste Immersed Boundary Method implementation.
-
-This is implemented in Chaste via the feature branch 'origin/fcooper/immersed_boundary', which can be obtained from
-the git repository hosted on https://chaste.cs.ox.ac.uk/.
-
-If you plan to build this project using the `scons` build infrastructure rather than `CMake`, you will need to edit
-your relevant `hostconfig` file to link `fftw3`, a dependency of Immersed Boundary simulations.
