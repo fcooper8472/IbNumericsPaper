@@ -555,7 +555,7 @@ public:
             // Add inter-cellular force law
             MAKE_PTR(ImmersedBoundaryLinearInteractionForce<2>, p_cell_cell_force);
             p_main_modifier->AddImmersedBoundaryForce(p_cell_cell_force);
-            p_cell_cell_force->SetSpringConstant(1e6);
+            p_cell_cell_force->SetSpringConst(1e6);
 
             // Simulation output directory
             std::string output_dir_256 = output_directory + '/' + boost::lexical_cast<std::string>(256);
@@ -646,7 +646,7 @@ public:
             // Add inter-cellular force law
             MAKE_PTR(ImmersedBoundaryLinearInteractionForce<2>, p_cell_cell_force);
             p_main_modifier->AddImmersedBoundaryForce(p_cell_cell_force);
-            p_cell_cell_force->SetSpringConstant(1e6);
+            p_cell_cell_force->SetSpringConst(1e6);
 
             // Simulation output directory
             std::string output_dir_256 = output_directory + '/' + boost::lexical_cast<std::string>(512);
