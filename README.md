@@ -10,9 +10,9 @@ To get the latest version, run:
 $ git clone -b fcooper/immersed_boundary https://chaste.cs.ox.ac.uk/git/chaste.git Chaste
 ```
 
-To get the specific revision tested when this README was last updated, run:
+To get the specific revision tested against this project when this README was last updated, run:
 
 ```bash
 $ cd Chaste
-$ git checkout 67c939405ae5a54dabc3140bd573768b0e544c9b
+$ git checkout bed7e910e04fab7119884297cf083d433be57820
 ```
