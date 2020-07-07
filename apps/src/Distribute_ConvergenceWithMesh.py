@@ -24,10 +24,10 @@ num_sims = 15
 
 
 def main():
-    #run_simulations()
-    #combine_output()
+    run_simulations()
+    combine_output()
     plot_results()
-    #compress_output()
+    compress_output()
 
 
 # Create a list of commands and pass them to separate processes
