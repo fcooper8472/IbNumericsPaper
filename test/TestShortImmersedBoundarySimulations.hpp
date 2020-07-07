@@ -66,7 +66,7 @@ class TestRepresentativeImmersedBoundarySimulations : public AbstractCellBasedTe
 {
 public:
 
-    void xTestShortSingleCellSim() throw(Exception)
+    void xTestShortSingleCellSim()
     {
         /*
          * 1: num nodes
@@ -123,7 +123,7 @@ public:
         simulator.Solve();
     }
 
-    void xTestShortTwoCellSim() throw(Exception)
+    void xTestShortTwoCellSim()
     {
         /*
          * 1: Num cells
@@ -174,7 +174,7 @@ public:
     }
 
 
-    void TestShortMultiCellSim() throw(Exception)
+    void TestShortMultiCellSim()
     {
         /*
          * 1: Num cells

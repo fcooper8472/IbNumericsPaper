@@ -231,7 +231,7 @@ void SetupAndRunSimulation(std::string idString, double corRestLength, double co
 
     simulator.Solve();
 
-    std::vector<unsigned> polygon_dist = p_mesh->GetPolygonDistribution();
+    auto polygon_dist = p_mesh->GetPolygonDistribution();
 
     OutputFileHandler results_handler(output_directory, false);
     out_stream results_file = results_handler.OpenOutputFile("results.csv");

@@ -145,7 +145,7 @@ public:
         SimulationTime::Destroy();
     }
 
-    void TestProfile512() throw(Exception)
+    void TestProfile512()
     {
         Timer timer;
         timer.Reset();
@@ -155,7 +155,7 @@ public:
         PRINT_VARIABLE(timer.GetElapsedTime());
     }
 
-    void TestProfile1024() throw(Exception)
+    void TestProfile1024()
     {
         Timer timer;
         timer.Reset();
@@ -165,7 +165,7 @@ public:
         PRINT_VARIABLE(timer.GetElapsedTime());
     }
 
-    void TestProfile2048() throw(Exception)
+    void TestProfile2048()
     {
         Timer timer;
         timer.Reset();

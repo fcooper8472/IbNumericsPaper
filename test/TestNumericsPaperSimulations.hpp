@@ -68,7 +68,7 @@ class TestNumericsPaperSimulations : public AbstractCellBasedTestSuite
 {
 public:
 
-    void xTestEllipseRelaxing() throw(Exception)
+    void xTestEllipseRelaxing()
     {
         /*
          * 1: num nodes
@@ -158,7 +158,7 @@ public:
         delete(p_mesh);
     }
 
-    void xTestSingleCellVolumeChangeWithNodeSpacing() throw(Exception)
+    void xTestSingleCellVolumeChangeWithNodeSpacing()
     {
         /**
          * This test simulates a single circular cell for a fixed simulation time.
@@ -266,7 +266,7 @@ public:
     }
 
 
-    void xTestIntraCellularParameterScaling() throw(Exception)
+    void xTestIntraCellularParameterScaling()
     {
         /*
          * This test runs two simulations of the same elliptical membrane twice with different
@@ -455,7 +455,7 @@ public:
         results_file->close();
     }
 
-    void xTestInterCellularParameterScaling() throw(Exception)
+    void xTestInterCellularParameterScaling()
     {
         /*
          * This test runs two simulations of two ellipsoid membrane with different
@@ -555,7 +555,7 @@ public:
             // Add inter-cellular force law
             MAKE_PTR(ImmersedBoundaryLinearInteractionForce<2>, p_cell_cell_force);
             p_main_modifier->AddImmersedBoundaryForce(p_cell_cell_force);
-            p_cell_cell_force->SetSpringConstant(1e6);
+            p_cell_cell_force->SetSpringConst(1e6);
 
             // Simulation output directory
             std::string output_dir_256 = output_directory + '/' + boost::lexical_cast<std::string>(256);
@@ -646,7 +646,7 @@ public:
             // Add inter-cellular force law
             MAKE_PTR(ImmersedBoundaryLinearInteractionForce<2>, p_cell_cell_force);
             p_main_modifier->AddImmersedBoundaryForce(p_cell_cell_force);
-            p_cell_cell_force->SetSpringConstant(1e6);
+            p_cell_cell_force->SetSpringConst(1e6);
 
             // Simulation output directory
             std::string output_dir_256 = output_directory + '/' + boost::lexical_cast<std::string>(512);
@@ -682,7 +682,7 @@ public:
         results_file->close();
     }
 
-    void TestElementShapeWithCellDivision() throw(Exception)
+    void TestElementShapeWithCellDivision()
     {
         /*
          */
