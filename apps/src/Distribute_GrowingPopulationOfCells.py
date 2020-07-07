@@ -1,24 +1,9 @@
 import itertools
 import os
-import re
 import subprocess
 import time
 
 import multiprocessing as mp
-import numpy as np
-
-try:
-    import svg_to_webm
-except ImportError as e:
-    svg_to_webm = None
-    quit("Exception: " + str(e))
-
-try:
-    import dominate
-    from dominate.tags import *
-except ImportError as e:
-    dominate = None
-    quit("Exception: " + str(e))
 
 # Globally accessible directory paths, names, and variables
 chaste_build_dir = os.environ.get('CHASTE_BUILD_DIR')
@@ -26,8 +11,6 @@ chaste_test_dir = os.environ.get('CHASTE_TEST_OUTPUT')
 
 executable = os.path.join(chaste_build_dir, 'projects/IbNumericsPaper/apps', 'Exe_GrowingPopulationOfCells')
 path_to_output = os.path.join(chaste_test_dir, 'ib_numerics_paper', 'Exe_GrowingPopulationOfCells')
-path_to_sims = os.path.join(path_to_output, 'sim')
-path_to_movies = os.path.join(path_to_output, 'movies')
 
 if not(os.path.isfile(executable)):
     quit('Py: Could not find executable: ' + executable)
